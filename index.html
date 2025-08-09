@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Virtual Toaster Simulator — Ayyo Edition</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <!-- Malayalam font -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Malayalam:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#0f1720;
+      --card:#0b1220;
+      --accent:#ffbe2e;
+      --glass: rgba(255,255,255,0.06);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100vh;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans Malayalam", sans-serif;
+      background-image: url("back.jpg");
+      color:#eef2f7;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:30px;
+    }
+
+    .card{
+      width:920px; max-width:95vw;
+     background: linear-gradient(180deg, rgba(240, 197, 210, 0.616),rgba(182, 181, 181, 0.397));
+      border-radius:18px; padding:22px;
+          box-shadow: 0 12px 40px rgba(201, 202, 211, 0.7);
+      display:grid; grid-template-columns: 420px 1fr; gap:20px;
+      align-items:center;
+    }
+
+    /* LEFT: visual toaster */
+    .toaster-wrap{ display:flex; flex-direction:column; align-items:center; gap:12px; }
+    .toaster{
+      position:relative; width:360px; height:240px; border-radius:12px;
+      background: linear-gradient(180deg,#1b2430,#0e1620); display:flex; align-items:center; justify-content:center;
+      box-shadow: inset 0 6px 20px rgba(255,255,255,0.02), 0 6px 18px rgba(0,0,0,0.6);
+      overflow:visible;
+    }
+    .slot{
+      position:relative; width:220px; height:160px; border-radius:8px; background:var(--glass); display:flex; align-items:flex-end; justify-content:center;
+      box-shadow: inset 0 -6px 18px rgba(0,0,0,0.35);
+      overflow:visible;
+    }
+    .bread{
+      width:140px; height:auto; transform-origin:50% 90%;
+      transition: transform 200ms linear, filter 120ms linear;
+      filter: brightness(1.05) saturate(1.03);
+      will-change: transform, filter;
+      position:relative; bottom:8px;
+    }
+    /* popping animation class */
+    .pop {
+      transform: translateY(-86px) rotate(-6deg) scale(1.06);
+      transition: transform 420ms cubic-bezier(.18,.9,.32,1);
+    }
+
+    /* Right: controls */
+    .controls{ display:flex; flex-direction:column; gap:12px; padding-left:6px }
+    .controls h1{ margin:0; font-size:1.3rem; letter-spacing:0.2px }
+    .controls p.small{ margin:0; color:#cbd5e1; opacity:0.9 }
+    .buttons{ display:flex; gap:10px; margin-top:6px }
+    button.btn{
+      background:var(--accent); color:#0b1220; border:none; padding:10px 14px; border-radius:10px; font-weight:700; cursor:pointer;
+      box-shadow: 0 6px 18px rgba(255,190,46,0.08);
+    }
+    button.ghost{ background:transparent; color:#dbeafe; border:1px solid rgba(255,255,255,0.06) }
+
+    .status{ margin-top:12px; color:#a8b3c7; font-size:0.95rem }
+    .controls .sliders{ display:flex; gap:10px; align-items:center; margin-top:6px }
+    label{ font-size:0.9rem; color:#cbd5e1 }
+
+    /* meme overlay */
+    .overlay{
+      position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
+      background: linear-gradient(180deg, rgba(0,0,0,0.45), rgba(0,0,0,0.6));
+      z-index:80; visibility:hidden; opacity:0; transition:opacity .18s ease;
+    }
+    .overlay.show{ visibility:visible; opacity:1 }
+    .meme-card{
+      background: #111827; border-radius:14px; padding:18px; width:min(680px,92vw); text-align:center; box-shadow:0 20px 60px rgba(2,6,23,0.7);
+    }
+    .meme-img{ max-width:100%; border-radius:8px }
+    .meme-text{
+      font-family: "Noto Sans Malayalam", system-ui, sans-serif;
+      font-size:2.4rem; margin-top:10px; color:#ffedd5; text-shadow:0 6px 18px rgba(0,0,0,0.6);
+    }
+    .meme-sub{ color:#cbd5e1; margin-top:8px; font-size:0.95rem }
+
+    footer.small{ margin-top:14px; color:#9aa8c2; font-size:0.85rem }
+
+    /* responsive */
+    @media (max-width:900px){
+      .card{ grid-template-columns: 1fr; padding:16px }
+      .toaster{ width:100%; height:200px }
+      .bread{ width:120px }
+    }
+  </style>
+</head>
+<body>
+  <div class="card" role="application">
+    <div class="toaster-wrap" aria-hidden="false">
+      <div class="toaster" id="toaster">
+        <div class="slot" id="slot">
+          <img id="bread" class="bread" src="bread.jpg" alt="bread slice">
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;align-items:center">
+        <img src="toater.jpg" alt="toaster art" style="width:84px;height:auto;filter:drop-shadow(0 6px 20px rgba(0,0,0,.6))">
+        <div style="text-align:left">
+          <div style="font-weight:700;font-size:1rem">Virtual Toaster — Mallu Punchline Edition</div>
+          <div style="font-size:0.9rem;color:#bfcfe4">Toast visually, hear the sizzle and then… meme. No calories.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <h1>Make nonsense breakfast — step by step</h1>
+      <p class="small">Click <strong>Enable Sounds & Start</strong> once (a browser requirement) → then press <strong>Toast!</strong></p>
+
+      <div class="buttons">
+        <button id="enableBtn" class="btn">Enable Sounds & Start</button>
+        <button id="toastBtn" class="btn" disabled>Toast!</button>
+        <button id="cancelBtn" class="ghost" disabled>Cancel</button>
+      </div>
+
+      <div class="sliders">
+        <label for="timeRange">Toasting time</label>
+        <input id="timeRange" type="range" min="2" max="8" value="4">
+        <span id="timeLabel" style="width:40px;text-align:center;color:#cbd5e1">4s</span>
+      </div>
+
+      <div class="status" id="status">Status: idle — enable sounds to start.</div>
+
+      <footer class="small">Tip: Replace the punchline audio files in <code>assets/</code> with your favourite Malayalam meme clips (make sure you have rights to use them).</footer>
+    </div>
+  </div>
+
+    <!-- meme overlay -->
+  <div id="overlay" class="overlay" role="dialog" aria-hidden="true">
+    <div class="meme-card">
+      <img id="memeImg" class="meme-img" src="assets/meme1.png" alt="meme image">
+      <div id="memeText" class="meme-text">ayyo poyee ayyayyo poyeee</div>
+      <div class="meme-sub" id="memeSub"></div>
+      <div style="margin-top:14px">
+        <button id="againBtn" class="btn">Try again</button>
+        <button id="closeBtn" class="ghost">Close</button>
+        <!-- Final celebration GIF -->
+<img src="suraj.gif" alt="">
+
+
+<script>
+/* ---------------------------
+   Configuration / assets
+   --------------------------- */
+const ASSETS = {
+  sizzle: 'sizzle.mp3',   // looping during toast
+  ding:   'end_sound.mp3', 
+      // done
+  punchlines: [                  // list of comedic Malayalam audio clips (you supply)
+    'assets/punch1.mp3',
+    'assets/punch2.mp3',
+    'assets/punch3.mp3'
+  ],
+  memeImages: ['assets/meme1.png','assets/meme2.png']
+};
+
+/* ---------------------------
+   UI refs
+   --------------------------- */
+const enableBtn = document.getElementById('enableBtn');
+const toastBtn = document.getElementById('toastBtn');
+const cancelBtn = document.getElementById('cancelBtn');
+const timeRange = document.getElementById('timeRange');
+const timeLabel = document.getElementById('timeLabel');
+const status = document.getElementById('status');
+const bread = document.getElementById('bread');
+const overlay = document.getElementById('overlay');
+const memeImg = document.getElementById('memeImg');
+const memeText = document.getElementById('memeText');
+const againBtn = document.getElementById('againBtn');
+const closeBtn = document.getElementById('closeBtn');
+
+/* ---------------------------
+   Audio objects - created on user gesture
+   --------------------------- */
+let audioReady = false;
+let sizzleAudio = null;
+let end_soundAudio = null;
+// punchlines will be loaded on enable
+let punchAudios = [];
+
+/* Internal state */
+let toasting = false;
+let toastStart = 0;
+let toastDuration = 4000; // ms (adjust from slider)
+let rafId = null;
+
+/* ---------------------------
+   Helpers
+   --------------------------- */
+function setStatus(txt){ status.textContent = 'Status: ' + txt; }
+function rand(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+/* Create audio elements after user gesture (autoplay policy) */
+async function enableAudio(){
+  if(audioReady) return;
+  setStatus('initializing audio...');
+  try{
+    sizzleAudio = new Audio(ASSETS.sizzle);
+    sizzleAudio.loop = true;
+    end_soundAudio = new Audio(ASSETS.ding);
+
+    // preload punchlines as Audio objects (not autoplaying)
+    punchAudios = ASSETS.punchlines.map(src => new Audio(src));
+
+    // try to play+pause quickly on user gesture (unlocks playback in many browsers)
+    await sizzleAudio.play().then(()=>{ sizzleAudio.pause(); sizzleAudio.currentTime = 0; }).catch(()=>{ /* may fail but continue */ });
+    await end_soundAudio.play().then(()=>{ end_soundAudio.pause(); end_soundAudio.currentTime = 0; }).catch(()=>{});
+    for(const a of punchAudios){
+      await a.play().then(()=>{ a.pause(); a.currentTime = 0; }).catch(()=>{});
+    }
+
+    audioReady = true;
+    setStatus('sounds ready — press "Toast!" to begin.');
+    enableBtn.disabled = true;
+    toastBtn.disabled = false;
+    cancelBtn.disabled = false;
+  }catch(e){
+    console.error('Audio init failed', e);
+    setStatus('Audio could not be initialized. Check console and file paths.');
+  }
+}
+
+/* Map progress [0..1] -> filter string for browning */
+function filterForProgress(p){
+  // p=0 => light; p=1 => dark
+  const brightness = 1 - 0.45 * p;        // 1 -> 0.55
+  const sepia = 0.02 + 0.9 * p;           // 0.02 -> 0.92
+  const contrast = 1 + 0.25 * p;          // 1 -> 1.25
+  const saturate = 1 + 0.15 * p;          // 1 -> 1.15
+  return `brightness(${brightness}) sepia(${sepia}) contrast(${contrast}) saturate(${saturate})`;
+}
+
+/* Toast animation loop */
+function stepToast(timestamp){
+  if(!toastStart) toastStart = timestamp;
+  const elapsed = timestamp - toastStart;
+  const p = Math.min(1, elapsed / toastDuration);
+  bread.style.filter = filterForProgress(p);
+  // slight wobble
+  const wobble = Math.sin(elapsed / 120) * (1 + p*5) * 0.6;
+  bread.style.transform = `translateY(${Math.max(0, -p*20)}px) rotate(${wobble}deg)`;
+
+  if(p < 1){
+    rafId = requestAnimationFrame(stepToast);
+  }else{
+    // finish sequence
+    finishToast();
+  }
+}
+
+/* Start toasting */
+function startToast(){
+  if(!audioReady){
+    setStatus('Click "Enable Sounds & Start" first (browser requires a user gesture).');
+    return;
+  }
+  if(toasting) return;
+
+  toasting = true;
+  toastStart = 0;
+  toastDuration = parseInt(timeRange.value,10) * 1000;
+  setStatus('Toasting... (' + timeRange.value + 's)');
+  toastBtn.disabled = true;
+  enableBtn.disabled = true;
+  cancelBtn.disabled = false;
+
+  // play sizzle loop
+  if(sizzleAudio){
+    sizzleAudio.currentTime = 0;
+    sizzleAudio.play().catch(()=>{/* ignore */});
+  }
+
+  // start animation
+  rafId = requestAnimationFrame(stepToast);
+}
+
+/* Cancel/stop toasting mid-way */
+function cancelToast(){
+  if(!toasting) return;
+  toasting = false;
+  if(rafId) cancelAnimationFrame(rafId);
+  rafId = null;
+  if(sizzleAudio) { sizzleAudio.pause(); sizzleAudio.currentTime = 0; }
+  bread.style.filter = ''; bread.style.transform = '';
+  toastBtn.disabled = false;
+  enableBtn.disabled = true;
+  setStatus('Toasting canceled.');
+}
+
+/* Finish toast -> ding -> show meme & punchline */
+function finishToast(){
+  toasting = false;
+  if(sizzleAudio){ sizzleAudio.pause(); sizzleAudio.currentTime = 0; }
+  // pop the bread (CSS class)
+  bread.classList.add('pop');
+
+  // play ding
+  if(end_soundAudio){
+    end_soundAudio.currentTime = 0;
+    end_soundAudio.play().catch(()=>{});
+  }
+
+  setStatus('Done! Showing meme...');
+  // after tiny delay, show meme overlay + random punchline audio
+  setTimeout(()=>{
+    showMemeAndPunchline();
+  }, 500);
+}
+
+/* Show overlay & play a random punchline clip */
+function showMemeAndPunchline(){
+  // pick a random meme image & punchline audio
+  const img = ASSETS.memeImages[Math.floor(Math.random() * ASSETS.memeImages.length)];
+  const punch = punchAudios[Math.floor(Math.random() * punchAudios.length)];
+
+  memeImg.src = img;
+  // set the Malayalam text (we'll show translit exactly as requested)
+  memeText.textContent = 'ayyo patticheee'; // if you want Malayalam script change this to actual script
+
+  overlay.classList.add('show');
+  overlay.setAttribute('aria-hidden','false');
+
+  // play punchline
+  if(punch){
+    punch.currentTime = 0;
+    punch.play().catch(()=>{ console.warn('punch audio play blocked'); });
+  }
+
+  // re-enable Try again / Close
+  toastBtn.disabled = false;
+  enableBtn.disabled = true;
+  setStatus('Meme displayed — try again!');
+}
+
+/* Reset after overlay close */
+function hideMeme(){
+  overlay.classList.remove('show');
+  overlay.setAttribute('aria-hidden','true');
+  // reset bread
+  bread.classList.remove('pop');
+  bread.style.filter = '';
+  bread.style.transform = '';
+}
+
+/* ---------------------------
+   Event wiring
+   --------------------------- */
+enableBtn.addEventListener('click', enableAudio);
+toastBtn.addEventListener('click', startToast);
+cancelBtn.addEventListener('click', cancelToast);
+timeRange.addEventListener('input', () => {
+  timeLabel.textContent = timeRange.value + 's';
+});
+againBtn.addEventListener('click', () => { hideMeme(); setTimeout(()=>startToast(), 150); });
+closeBtn.addEventListener('click', () => { hideMeme(); });
+
+/* accessibility: close overlay on Escape */
+document.addEventListener('keydown', (e) => {
+  if(e.key === 'Escape' && overlay.classList.contains('show')){
+    hideMeme();
+  }
+});
+
+/* safety: show default status */
+setStatus('idle — click "Enable Sounds & Start" to enable audio.');
+</script>
+</body>
+</html>
